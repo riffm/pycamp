@@ -47,7 +47,22 @@ def env_descriptions(conf_parser):
             raise ValueError('Please check your `base` option for'
                              ' environment(s) %s' % ', '.join(defered.keys()))
         map(defered.pop, inherited)
-    return ready.items()
+    return ready
+
+
+def get_commands(conf_parser):
+    defaults = {
+        'cwd': '',
+        'env': None,
+        'run': None,
+    }
+    result = {}
+    for section_name in conf_parser.sections():
+        if section_name.startswith('cmd:'):
+            name = section_name.split(':', 1)[1]
+            result[name] = Command(name, prepair_options(conf_parser.items(section_name),
+                                                         defaults=defaults.copy()))
+    return result
 
 
 def prepair_options(items, defaults=None):
@@ -62,7 +77,7 @@ def prepair_options(items, defaults=None):
 
 
 class Environ(object):
-    def __init__(self, name, options):
+    def __init__(self, name, options, upgrade=False):
         self.name = name
         self.options = options
         self.path = os.path.join('.pycamp', name)
@@ -72,7 +87,10 @@ class Environ(object):
         if not os.path.exists(os.path.join(self.full_path, 'bin', 'python')):
             logger.info('Environment `%s` does not exist' % name)
             self._create()
-        self._install_deps()
+        elif upgrade:
+            logger.info('Force upgrade of `%s` environment' % name)
+            self._create()
+        self._install_deps(upgrade)
         self._update_target_package()
 
     @property
@@ -96,10 +114,13 @@ class Environ(object):
         if retcode:
             sys.exit('Virtualenv returned %d' % retcode)
 
-    def _install_deps(self):
+    def _install_deps(self, upgrade=False):
         if self.options['deps']:
             logger.info('Updating dependencies for `%s`...' % self.name)
-            args = [self.pip, '--log=%s/pip.log' % self.full_path, 'install'] + self.options['deps']
+            args = [self.pip, '--log=%s/pip.log' % self.full_path, 'install']
+            if upgrade:
+                args += ['--upgrade']
+            args += self.options['deps']
             logger.info(' '.join(args))
             p = subprocess.Popen(args)
             retcode = p.wait()
@@ -116,19 +137,64 @@ class Environ(object):
             if retcode:
                 sys.exit('Could not install your package')
 
+    def __repr__(self):
+        return self.name
 
-def main(args):
+
+class Command(object):
+    def __init__(self, name, options):
+        self.name = name
+        self.options = options
+
+    def __call__(self, environ):
+        if self.options['env'] and environ.name != self.options['env']:
+            return
+        cwd = None
+        if self.options['cwd']:
+            cwd = os.path.abspath(self.options['cwd'])
+        logger.info('Running command `%s` in `%s` environment' % (self.name, environ.name))
+        args = (self.options['run'] % environ.namespace).split()
+        logger.info(' '.join(args))
+        subprocess.call(args)
+
+
+def main():
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option('-e', '--environ', dest='environ',
+                      help='Environment name', metavar='ENV')
+    parser.add_option('-u', '--upgrade', dest='upgrade', default=False,
+                      action='store_true', help='Force environment rebuilding')
+    options, args = parser.parse_args()
     config_path = os.path.abspath('pycamp.cfg')
     if os.path.exists(config_path) and os.path.isfile(config_path):
         conf_parser = ConfigParser.RawConfigParser()
         conf_parser.read(config_path)
-        for env_name, options in env_descriptions(conf_parser):
-            print env_name, options
-            #env = Environ(env_name, options)
-            #env.execute_runcmd()
+        descriptions = env_descriptions(conf_parser)
+        commands = get_commands(conf_parser)
+        envs = []
+        if options.environ:
+            if options.environ in descriptions:
+                envs.append(Environ(options.environ, descriptions[options.environ], 
+                                    upgrade=options.upgrade))
+            else:
+                raise ValueError('Have no `%s` environment' % options.environ)
+        else:
+            for env_name, options in descriptions.items():
+                envs.append(Environ(env_name, options, upgrade=options.upgrade))
+        if args:
+            unknown = filter(lambda c: c not in commands, args)
+            if unknown:
+                raise ValueError('Unknown command(s) %s' % ', '.join(unknown))
+            for command_name in args:
+                command = commands[command_name]
+                for env in envs:
+                    command(env)
+        else:
+            logger.info('Environments ready, next time provide a command')
     else:
         sys.exit('Please provide `pycamp.cfg`')
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
