@@ -120,11 +120,8 @@ class Environ(object):
         logger.info('Running your command')
         args = (self.options['runcmd'] % self.namespace).split()
         logger.info(' '.join(args))
-        p = subprocess.Popen(args, cwd=self.cwd)
         # NOTE: `runcmd` may be a longrunning process or daemon
-        #retcode = p.wait()
-        #if retcode:
-        #    logger.info('`%s` command failed' % self.name)
+        subprocess.call(args, cwd=self.cwd)
 
 
 if __name__ == '__main__':
