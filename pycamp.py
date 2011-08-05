@@ -121,9 +121,10 @@ class TestEnv(object):
         args = (self.options['runcmd'] % self.namespace).split()
         logger.info(' '.join(args))
         p = subprocess.Popen(args, cwd=self.cwd)
-        retcode = p.wait()
-        if retcode:
-            logger.info('`%s` command failed' % self.name)
+        # NOTE: `runcmd` may be a longrunning process or daemon
+        #retcode = p.wait()
+        #if retcode:
+        #    logger.info('`%s` command failed' % self.name)
 
 
 if __name__ == '__main__':
