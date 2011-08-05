@@ -16,35 +16,51 @@ logger = logging.getLogger(__name__)
 def main(args):
     config_path = os.path.abspath('pycamp.cfg')
     if os.path.exists(config_path) and os.path.isfile(config_path):
-        for env_name, options in env_descriptions(config_path):
-            env = Environ(env_name, options)
-            env.execute_runcmd()
+        conf_parser = ConfigParser.RawConfigParser()
+        conf_parser.read(config_path)
+        for env_name, options in env_descriptions(conf_parser):
+            print env_name, options
+            #env = Environ(env_name, options)
+            #env.execute_runcmd()
     else:
         sys.exit('Please provide `pycamp.cfg`')
 
 
-def env_descriptions(config_path):
-    descriptions = []
+def env_descriptions(conf_parser):
     defaults = {
-        'base_python': 'python',
-        'change-dir': '',
+        'python': 'python',
         'deps': [],
-        'runcmd': '',
+        'base': None,
     }
-    conf_parser = ConfigParser.RawConfigParser()
-    conf_parser.read(config_path)
-    base_env_options = prepair_options(conf_parser.items('base'), defaults=defaults)
+    ready = {}
+    defered = {}
     for section_name in conf_parser.sections():
-        if section_name == 'base':
-            continue
-        if ':' in section_name:
-            env_name = section_name.split(':', 1)[1]
-            env_options = prepair_options(conf_parser.items(section_name),
-                                          defaults=base_env_options.copy())
-            descriptions.append((env_name, env_options))
-        else:
-            raise ValueError('Section `%s` is not in form `[base:ENV_NAME]`' % section_name)
-    return descriptions
+        if not section_name.startswith('cmd:'):
+            if conf_parser.has_option(section_name, 'base'):
+                base = conf_parser.get(section_name, 'base')
+                if base in ready:
+                    ready[section_name] = prepair_options(conf_parser.items(section_name),
+                                                          defaults=ready[base].copy())
+                else:
+                    defered[section_name] = base
+            else:
+                ready[section_name] = prepair_options(conf_parser.items(section_name),
+                                                      defaults=defaults.copy())
+    if defered and not ready:
+        raise ValueError('All your environments has `base` option,'
+                         ' so we can not get very first base environment')
+    while defered:
+        inherited = []
+        for env_name, base in defered.items():
+            if base in ready:
+                inherited.append(env_name)
+                ready[env_name] = prepair_options(conf_parser.items(env_name),
+                                                  defaults=ready[base].copy())
+        if not inherited:
+            raise ValueError('Please check your `base` option for'
+                             ' environment(s) %s' % ', '.join(defered.keys()))
+        map(defered.pop, inherited)
+    return ready.items()
 
 
 def prepair_options(items, defaults=None):
@@ -66,9 +82,6 @@ class Environ(object):
         self.full_path = os.path.abspath(self.path)
         self.pip = os.path.join(self.full_path, 'bin', 'pip')
         self.python = os.path.join(self.full_path, 'bin', 'python')
-        self.cwd = None
-        if options['change-dir']:
-            self.cwd = os.path.abspath(options['change-dir'])
         if not os.path.exists(os.path.join(self.full_path, 'bin', 'python')):
             logger.info('Environment `%s` does not exist' % name)
             self._create()
@@ -89,7 +102,7 @@ class Environ(object):
         except OSError, e:
             if e.errno != errno.EEXIST:
                 raise
-        args = ['virtualenv', '--no-site-packages', '-p', self.options['base_python'], self.full_path]
+        args = ['virtualenv', '--no-site-packages', '-p', self.options['python'], self.full_path]
         logger.info(' '.join(args))
         p = subprocess.Popen(args)
         retcode = p.wait()
@@ -115,13 +128,6 @@ class Environ(object):
             retcode = p.wait()
             if retcode:
                 sys.exit('Could not install your package')
-
-    def execute_runcmd(self):
-        logger.info('Running your command')
-        args = (self.options['runcmd'] % self.namespace).split()
-        logger.info(' '.join(args))
-        # NOTE: `runcmd` may be a longrunning process or daemon
-        subprocess.call(args, cwd=self.cwd)
 
 
 if __name__ == '__main__':
