@@ -13,19 +13,6 @@ logging.basicConfig(format='%(asctime)-15s: %(message)s',
 logger = logging.getLogger(__name__)
 
 
-def main(args):
-    config_path = os.path.abspath('pycamp.cfg')
-    if os.path.exists(config_path) and os.path.isfile(config_path):
-        conf_parser = ConfigParser.RawConfigParser()
-        conf_parser.read(config_path)
-        for env_name, options in env_descriptions(conf_parser):
-            print env_name, options
-            #env = Environ(env_name, options)
-            #env.execute_runcmd()
-    else:
-        sys.exit('Please provide `pycamp.cfg`')
-
-
 def env_descriptions(conf_parser):
     defaults = {
         'python': 'python',
@@ -128,6 +115,19 @@ class Environ(object):
             retcode = p.wait()
             if retcode:
                 sys.exit('Could not install your package')
+
+
+def main(args):
+    config_path = os.path.abspath('pycamp.cfg')
+    if os.path.exists(config_path) and os.path.isfile(config_path):
+        conf_parser = ConfigParser.RawConfigParser()
+        conf_parser.read(config_path)
+        for env_name, options in env_descriptions(conf_parser):
+            print env_name, options
+            #env = Environ(env_name, options)
+            #env.execute_runcmd()
+    else:
+        sys.exit('Please provide `pycamp.cfg`')
 
 
 if __name__ == '__main__':
