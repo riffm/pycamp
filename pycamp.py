@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 def main(args):
-    config_path = os.path.abspath('testenv.cfg')
+    config_path = os.path.abspath('pycamp.cfg')
     if os.path.exists(config_path) and os.path.isfile(config_path):
         for env_name, options in env_descriptions(config_path):
-            env = TestEnv(env_name, options)
+            env = Environ(env_name, options)
             env.execute_runcmd()
     else:
-        sys.exit('Please provide `testenv.cfg`')
+        sys.exit('Please provide `pycamp.cfg`')
 
 
 def env_descriptions(config_path):
@@ -58,11 +58,11 @@ def prepair_options(items, defaults=None):
     return options
 
 
-class TestEnv(object):
+class Environ(object):
     def __init__(self, name, options):
         self.name = name
         self.options = options
-        self.path = os.path.join('.testenv', name)
+        self.path = os.path.join('.pycamp', name)
         self.full_path = os.path.abspath(self.path)
         self.pip = os.path.join(self.full_path, 'bin', 'pip')
         self.python = os.path.join(self.full_path, 'bin', 'python')
@@ -70,7 +70,7 @@ class TestEnv(object):
         if options['change-dir']:
             self.cwd = os.path.abspath(options['change-dir'])
         if not os.path.exists(os.path.join(self.full_path, 'bin', 'python')):
-            logger.info('Test environment `%s` does not exist' % name)
+            logger.info('Environment `%s` does not exist' % name)
             self._create()
         self._install_deps()
         self._update_target_package()
@@ -83,7 +83,7 @@ class TestEnv(object):
         }
 
     def _create(self):
-        logger.info('Creating test environment `%s`...' % self.name)
+        logger.info('Creating environment `%s`...' % self.name)
         try:
             os.makedirs(self.full_path)
         except OSError, e:
