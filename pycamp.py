@@ -87,10 +87,11 @@ class Environ(object):
         if not os.path.exists(os.path.join(self.full_path, 'bin', 'python')):
             logger.info('Environment `%s` does not exist' % name)
             self._create()
+            self._install_deps()
         elif upgrade:
             logger.info('Force upgrade of `%s` environment' % name)
             self._create()
-        self._install_deps(upgrade)
+            self._install_deps(upgrade)
         self._update_target_package()
 
     @property
@@ -107,7 +108,7 @@ class Environ(object):
         except OSError, e:
             if e.errno != errno.EEXIST:
                 raise
-        args = ['virtualenv', '--no-site-packages', '-p', self.options['python'], self.full_path]
+        args = ['virtualenv', '--quiet', '--no-site-packages', '-p', self.options['python'], self.full_path]
         logger.info(' '.join(args))
         p = subprocess.Popen(args)
         retcode = p.wait()
@@ -129,7 +130,7 @@ class Environ(object):
 
     def _update_target_package(self):
         if os.path.exists('setup.py'):
-            logger.info('Installing your application')
+            logger.info('Installing your application in `%s`' % self.name)
             args = [self.python, 'setup.py', 'install']
             logger.info(' '.join(args))
             p = subprocess.Popen(args)
@@ -191,7 +192,7 @@ def main():
                 for env in envs:
                     command(env)
         else:
-            logger.info('Environments ready, next time provide a command')
+            logger.info('Environments are ready, next time provide a command')
     else:
         sys.exit('Please provide `pycamp.cfg`')
 
