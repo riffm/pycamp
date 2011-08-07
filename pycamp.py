@@ -8,7 +8,7 @@ import subprocess
 import ConfigParser
 
 
-logging.basicConfig(format='%(asctime)-15s: %(message)s', 
+logging.basicConfig(format='[pycamp] %(message)s', 
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
