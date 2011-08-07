@@ -155,7 +155,7 @@ class Command(object):
         logger.info('Running command `%s` in `%s` environment' % (self.name, environ.name))
         args = (self.options['run'] % environ.namespace).split()
         logger.info(' '.join(args))
-        subprocess.call(args)
+        subprocess.call(args, cwd=cwd)
 
 
 def main():
