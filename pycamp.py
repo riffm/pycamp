@@ -180,8 +180,8 @@ def main():
             else:
                 raise ValueError('Have no `%s` environment' % options.environ)
         else:
-            for env_name, options in descriptions.items():
-                envs.append(Environ(env_name, options, upgrade=options.upgrade))
+            for env_name, env_options in descriptions.items():
+                envs.append(Environ(env_name, env_options, upgrade=options.upgrade))
         if args:
             unknown = filter(lambda c: c not in commands, args)
             if unknown:
