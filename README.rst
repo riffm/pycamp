@@ -43,12 +43,12 @@ pycamp.cfg
 Every section in ``pycamp.cfg`` is a name of environment. There is only a few
 options for envs
 
-- `python` - a python executable to use in a virtual environment (default is
+- *python* - a python executable to use in a virtual environment (default is
   ``python``)
-- `deps` - a list of dependencies which will be installed by ``pip``.
+- *deps* - a list of dependencies which will be installed by ``pip``.
   If there will be changes in the future you can update existing environment
   packages (optional)
-- `base` - a name of an environment you want to inherit from (optional)
+- *base* - a name of an environment you want to inherit from (optional)
 
 --------------------
 command descriptions
@@ -61,9 +61,9 @@ You can provide commands by prefexing section name with ``cmd:``::
 
 Options
 
-- `run` - actual command to execute. You can use template variables `bin-dir`
-  and `python-executable`
-- `cwd` optional current working directory for command. Must be relative to
+- *run* - actual command to execute. You can use template variables `bin-dir`
+  and *python-executable*
+- *cwd* optional current working directory for command. Must be relative to
   ``pycamp.cfg`` location
-- `env` optional environment name. This option limits execution of a command
+- *env* optional environment name. This option limits execution of a command
   only for certain environment
