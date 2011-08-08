@@ -98,7 +98,7 @@ class Environ(object):
     def namespace(self):
         return {
             'bin-dir': os.path.join(self.full_path, 'bin'),
-            'python_executable': os.path.join(self.full_path, 'bin', 'python'),
+            'python-executable': os.path.join(self.full_path, 'bin', 'python'),
         }
 
     def _create(self):
@@ -161,7 +161,7 @@ class Command(object):
 
 def main():
     from optparse import OptionParser
-    parser = OptionParser()
+    parser = OptionParser(usage='Usage: python -m %prog [options] [command_name]')
     parser.add_option('-e', '--environ', dest='environ',
                       help='Environment name', metavar='ENV')
     parser.add_option('-u', '--upgrade', dest='upgrade', default=False,
