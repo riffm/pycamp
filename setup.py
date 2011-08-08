@@ -6,7 +6,7 @@ setup(
     name='pycamp',
     version=version,
     description='Centralized virtualenvs manager and command executor',
-    long_description=open('README.rst').read(),
+    long_description=open('README.rst').read()+'\n\n'+open('CHANGELOG').read(),
     py_modules=['pycamp'],
     license='MIT',
     author='Tim Perevezentsev',
