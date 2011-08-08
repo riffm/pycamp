@@ -194,7 +194,26 @@ def main():
         else:
             logger.info('Environments are ready, next time provide a command')
     else:
-        sys.exit('Please provide `pycamp.cfg`')
+        sys.exit(SCELETON_MESSAGE)
+
+
+SCELETON_MESSAGE = '''
+Please provide `pycamp.cfg`.
+For example (docs http://pypi.python.org/pypi/pycamp):
+----------------------------
+[py26]
+python = python2.6
+deps =
+    nose
+
+[py27]
+base = py26
+python = python2.7
+
+[cmd:test]
+cwd = tests
+run = %(bin-dir)s/nosetests --all-module
+'''
 
 
 if __name__ == '__main__':
