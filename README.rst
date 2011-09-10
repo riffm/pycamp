@@ -29,6 +29,11 @@ You can use ``pycamp`` from any location in your filesystem. Just type::
 
     % python -m pycamp
 
+or::
+
+    % pycamp.py
+
+
 ``pycamp`` expects a ``pycamp.cfg`` file in that location. It's the main
 description of all environments and actions (commands, actualy).
 

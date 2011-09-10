@@ -2,5 +2,11 @@
 changelog
 ---------
 
+v0.2
+----
+
+* `pycamp.py` executable added to `setup.py`
+
+
 v0.1
 ----
