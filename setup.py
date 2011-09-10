@@ -8,6 +8,7 @@ setup(
     description='Centralized virtualenvs manager and command executor',
     long_description=open('README.rst').read()+'\n\n'+open('CHANGELOG').read(),
     py_modules=['pycamp'],
+    scripts=['pycamp.py'],
     license='MIT',
     author='Tim Perevezentsev',
     author_email='riffm2005@gmail.com',
